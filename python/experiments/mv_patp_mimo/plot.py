@@ -1,0 +1,287 @@
+"""Figure-generation registry for mv-patp-mimo (§V manuscript figures).
+
+Each manuscript figure is registered as a function that renders to PDF
+and PNG into ``manuscript/en/figures/``. The driver ingests up to two
+results directories — synthetic Track A (``--synthetic-dir``) for the
+ARE-vs-tail-index plot and DeepMIMO real-data (``--deepmimo-dir``) for
+the NMSE-vs-SNR plot — plus runs a fresh EM-PATP fit inline to render
+the convergence trace.
+
+Default directories follow the canonical run layout:
+``experiments/mv_patp_mimo/results/synthetic_full_v1/`` and
+``experiments/mv_patp_mimo/results/deepmimo_v2/``. Override with
+``--synthetic-dir`` / ``--deepmimo-dir`` on the CLI.
+
+Satisfies Requirement R11.1 (every figure regenerable from one entry
+point) and AGENTS.md Section 4.7 (no manually-drawn figures).
+
+Task: §23.1 (plot.py).
+"""
+
+from __future__ import annotations
+
+import argparse
+import logging
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+logger = logging.getLogger(__name__)
+
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_DEFAULT_OUT = _REPO_ROOT / "manuscript" / "en" / "figures"
+_DEFAULT_SYNTHETIC = _REPO_ROOT / "experiments" / "mv_patp_mimo" / "results" / "synthetic_full_v1"
+_DEFAULT_DEEPMIMO = _REPO_ROOT / "experiments" / "mv_patp_mimo" / "results" / "deepmimo_v2"
+
+
+# ---------------------------------------------------------------------------
+# Figure 1 — ARE vs Student-t tail index (synthetic Track A, §V-B headline)
+# ---------------------------------------------------------------------------
+
+# Map sigma_structure label -> (xtick_label, sort_key). Heavier tails on the
+# left, near-Gaussian on the right; fixed Gaussian baseline included.
+_TAIL_REGIMES: list[tuple[str, str, float]] = [
+    ("student_t_3",    r"$t_{3}$",    3.0),
+    ("student_t_4",    r"$t_{4}$",    4.0),
+    ("student_t_5",    r"$t_{5}$",    5.0),
+    ("student_t_1000", r"$t_{1000}$", 1000.0),
+    ("I",              "Gauss",       np.inf),
+]
+
+
+def _are_per_regime(
+    df: pd.DataFrame, estimator: str, k: int = 2, n: int = 512, p: int = 2,
+    alpha_mal: float = 1.0,
+) -> dict[str, float]:
+    """Compute ARE = MSE_OLS / MSE_estimator per sigma_structure."""
+    sub = df[
+        (df["k"] == k) & (df["n"] == n) & (df["p"] == p)
+        & (df["alpha_MAL"] == alpha_mal)
+    ]
+    ols = sub[sub["estimator"] == "ols"].set_index("sigma_structure")["mse_mean"]
+    est = sub[sub["estimator"] == estimator].set_index("sigma_structure")["mse_mean"]
+    out: dict[str, float] = {}
+    for sig in ols.index:
+        if sig not in est.index or est[sig] <= 0:
+            continue
+        out[sig] = float(ols[sig] / est[sig])
+    return out
+
+
+def fig_are_vs_alpha(synthetic_df: pd.DataFrame) -> "plt.Figure":
+    """ARE of every estimator family vs the Student-$t$ tail index.
+
+    Manuscript Section V-B (synthetic results, primary headline figure).
+    Reads cells of the canonical $(k, p, n, \\alpha_{\\mathrm{MAL}}) =
+    (2, 2, 512, 1)$ slice; bars compare PMM$_2$, PMM$_3$, and
+    $\\mathrm{oPMM}_{\\alpha}$ against OLS at $\\mathrm{ARE} = 1$.
+    """
+    fig, ax = plt.subplots(figsize=(5.5, 3.2))
+
+    estimators = [
+        ("matrix_pmm2",  r"$\mathrm{PMM}_{2}$",      "#4472C4"),
+        ("matrix_pmm3",  r"$\mathrm{PMM}_{3}$",      "#ED7D31"),
+        ("opmm_alpha",   r"$\mathrm{oPMM}_{\alpha}$","#70AD47"),
+    ]
+
+    x_positions = np.arange(len(_TAIL_REGIMES))
+    bar_width = 0.25
+    xtick_labels = [lbl for _, lbl, _ in _TAIL_REGIMES]
+
+    for offset, (est, est_label, color) in enumerate(estimators):
+        ares = _are_per_regime(synthetic_df, est)
+        heights = [ares.get(sig, np.nan) for sig, _, _ in _TAIL_REGIMES]
+        positions = x_positions + (offset - 1) * bar_width
+        ax.bar(positions, heights, width=bar_width, label=est_label,
+               color=color, edgecolor="white", linewidth=0.4)
+
+    ax.axhline(1.0, color="0.4", linestyle="--", linewidth=0.8,
+               label="OLS baseline")
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(xtick_labels)
+    ax.set_xlabel("Noise tail index (lighter $\\rightarrow$)")
+    ax.set_ylabel(r"ARE $=$ MSE$_{\mathrm{OLS}}$ / MSE$_{\mathrm{method}}$")
+    ax.set_ylim(0.9, 2.05)
+    ax.legend(loc="upper right", framealpha=0.9, fontsize=9)
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# Figure 2 — EM-PATP convergence trace (§V-B)
+# ---------------------------------------------------------------------------
+
+def fig_convergence() -> "plt.Figure":
+    """Outer-iteration ``||H_t - H_{t-1}||_F`` for representative cells.
+
+    Manuscript Section V-B. Three traces at a fixed $(k, p, n) = (2, 2, 512)$
+    and $\\alpha_{\\mathrm{MAL}} \\in \\{0.6, 1.0, 2.0\\}$ on the parametric
+    matrix-MAL family. Generated by running ``em_patp_estimate`` inline so
+    the figure depends only on the package, not on a saved trace file.
+    """
+    from mv_patp.core.em_patp import em_patp_estimate
+    from mv_patp.data_gen.matrix_mal_dgp import sample_matrix_mal
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.2))
+    k, p, n = 2, 2, 512
+    rng = np.random.default_rng(42)
+    H_truth = rng.standard_normal((k, p))
+    S = rng.standard_normal((p, n))
+
+    colors = ["#4472C4", "#ED7D31", "#70AD47"]
+    for color, alpha_mal in zip(colors, [0.6, 1.0, 2.0]):
+        N = sample_matrix_mal(
+            n_samples=1, k=k, n=n,
+            alpha=max(alpha_mal, (k - 1) / 2.0 + 0.05), seed=100,
+        )[0]
+        Y = H_truth @ S + N
+        fit = em_patp_estimate(Y, S, max_iter=30, tol=1e-9,
+                               alpha_p_init=1.5, alpha_p_fixed=False)
+        deltas = fit.log_history.get("outer_delta", [])
+        if deltas:
+            ax.semilogy(range(1, len(deltas) + 1), deltas, marker="o",
+                        markersize=4, color=color,
+                        label=fr"$\alpha_{{\mathrm{{MAL}}}}={alpha_mal}$")
+
+    ax.set_xlabel("Outer EM iteration $t$")
+    ax.set_ylabel(r"$\|\widehat{H}_{t} - \widehat{H}_{t-1}\|_{F}$")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# Figure 3 — DeepMIMO NMSE vs SNR (§V-D)
+# ---------------------------------------------------------------------------
+
+_DEEPMIMO_ESTIMATORS = [
+    ("ols",          "OLS",                          "0.5",     "o", "--"),
+    ("matrix_pmm2",  r"$\mathrm{PMM}_{2}$",          "#4472C4", "s", "-"),
+    ("matrix_pmm3",  r"$\mathrm{PMM}_{3}$",          "#ED7D31", "^", "-"),
+    ("opmm_alpha",   r"$\mathrm{oPMM}_{\alpha}$",    "#70AD47", "D", "-"),
+]
+
+
+def fig_real_data_deepmimo(deepmimo_df: pd.DataFrame) -> "plt.Figure":
+    """Mean MSE per element of $\\widehat{H}$ vs SNR on both DeepMIMO scenarios.
+
+    Manuscript Section V-D. Variance MLEs (Wishart, matrix-$t$, matrix-$F$)
+    are omitted because they collapse exactly to OLS on this DGP — see
+    discussion in $\\S\\,$V-D.
+    """
+    scenarios = sorted(deepmimo_df["scenario"].dropna().unique().tolist())
+    fig, axes = plt.subplots(
+        1, len(scenarios), figsize=(7.5, 3.2), sharey=True,
+    )
+    if len(scenarios) == 1:
+        axes = [axes]
+
+    for ax, scen in zip(axes, scenarios):
+        sub = deepmimo_df[deepmimo_df["scenario"] == scen]
+        snrs = sorted(sub["snr_db"].unique())
+        for est, label, color, marker, linestyle in _DEEPMIMO_ESTIMATORS:
+            ys = []
+            for snr in snrs:
+                row = sub[(sub["snr_db"] == snr) & (sub["estimator"] == est)]
+                ys.append(float(row["mse_mean"].iloc[0]) if not row.empty else np.nan)
+            ax.semilogy(snrs, ys, marker=marker, color=color, linestyle=linestyle,
+                        label=label, markersize=5, linewidth=1.4)
+        ax.set_title(scen.replace("_", r"\_"), fontsize=10)
+        ax.set_xlabel("SNR (dB)")
+        ax.grid(alpha=0.3, which="both")
+    axes[0].set_ylabel(r"Mean MSE per element of $\widehat{H}$")
+    axes[-1].legend(loc="upper right", fontsize=8, framealpha=0.9)
+    fig.tight_layout()
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# Driver
+# ---------------------------------------------------------------------------
+
+def render_all(
+    synthetic_df: pd.DataFrame | None,
+    deepmimo_df: pd.DataFrame | None,
+    output_dir: Path,
+    formats: tuple[str, ...] = ("pdf",),
+) -> list[Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+
+    pairs: list[tuple[str, "plt.Figure | None"]] = []
+    if synthetic_df is not None and not synthetic_df.empty:
+        pairs.append(("fig_are_vs_alpha", fig_are_vs_alpha(synthetic_df)))
+    else:
+        logger.warning("No synthetic cells.csv; skipping fig_are_vs_alpha.")
+
+    try:
+        pairs.append(("fig_convergence", fig_convergence()))
+    except ImportError as exc:
+        logger.warning("Skipping fig_convergence (mv_patp not importable: %s).", exc)
+
+    if deepmimo_df is not None and not deepmimo_df.empty:
+        pairs.append(("fig_real_data_deepmimo",
+                      fig_real_data_deepmimo(deepmimo_df)))
+    else:
+        logger.warning("No deepmimo cells.csv; skipping fig_real_data_deepmimo.")
+
+    for stem, fig in pairs:
+        for fmt in formats:
+            path = output_dir / f"{stem}.{fmt}"
+            fig.savefig(path, bbox_inches="tight", dpi=200)
+            written.append(path)
+            logger.info("Wrote %s", path)
+        plt.close(fig)
+    return written
+
+
+def _load_csv(path: Path | None) -> pd.DataFrame | None:
+    if path is None:
+        return None
+    csv = path / "cells.csv"
+    if not csv.exists():
+        logger.warning("cells.csv not found in %s", path)
+        return None
+    return pd.read_csv(csv)
+
+
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Render mv-patp-mimo §V manuscript figures.",
+    )
+    parser.add_argument("--synthetic-dir", type=Path, default=_DEFAULT_SYNTHETIC,
+                        help="Track A results dir (default: %(default)s).")
+    parser.add_argument("--deepmimo-dir", type=Path, default=_DEFAULT_DEEPMIMO,
+                        help="DeepMIMO results dir (default: %(default)s).")
+    parser.add_argument("--output-dir", type=Path, default=_DEFAULT_OUT,
+                        help="Figure output dir (default: %(default)s).")
+    parser.add_argument("--format", action="append", default=None,
+                        help="Output format (pdf, png). May repeat; default pdf.")
+    parser.add_argument("--log-level", default="INFO")
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper()),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    formats: tuple[str, ...] = tuple(args.format) if args.format else ("pdf",)
+
+    synthetic_df = _load_csv(args.synthetic_dir)
+    deepmimo_df = _load_csv(args.deepmimo_dir)
+    written = render_all(synthetic_df, deepmimo_df, args.output_dir, formats)
+    for p in written:
+        print(p)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

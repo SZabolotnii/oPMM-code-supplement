@@ -1,0 +1,28 @@
+{
+  "config_path": "/Users/serhiizabolotnii/Science/oPMM/experiments/mv_patp_mimo/config_tyler_ablation.yaml",
+  "git_commit": "4ece531473df24cdd5a057dd6d19120339bfed1e",
+  "input_data_sha256": {},
+  "package_versions": {
+    "h5py": "3.11.0",
+    "matplotlib": "3.9.0",
+    "mpmath": "1.3.0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2",
+    "pyyaml": "6.0.2",
+    "scipy": "1.13.1"
+  },
+  "pass_fail_summary": {
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_estols": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_estopmm_alpha": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_esttyler_opmm": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_estols": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_estopmm_alpha": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_esttyler_opmm": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estols": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha": "ok",
+    "k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_esttyler_opmm": "ok"
+  },
+  "seed": 42,
+  "timestamp_utc": "2026-05-10T17:59:33.230744+00:00",
+  "wall_clock_seconds": 4224.07925241701
+}

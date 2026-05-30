@@ -1,0 +1,61 @@
+# config_synthetic.yaml
+#
+# Full synthetic Monte Carlo configuration for the manuscript Section V-B
+# table. Per Spec.md Section 12 PIVOT 14, the misspec primary scope spans
+# three regimes:
+#
+#   A. Matrix MAL non-degradation: alpha_MAL in {0.6, 1.0, 2.0}
+#      (sigma_structure = "I", M_norm = 0).
+#   B. Student-t misspecification: df in {3, 4, 5}
+#      (encoded via sigma_structure = "student_t_<df>"; alpha_MAL is
+#       ignored on this path but kept in the cell signature).
+#   C. Gaussian non-degradation: df = inf (sigma_structure = "student_t_1000"
+#      approximates Gaussian within rounding).
+#
+# Default replicates 60 keeps the run under ~10 minutes on a single
+# core; the manuscript table uses 500 reps via env MV_PATP_FULL=1
+# (handled in run.py orchestrator extensions).
+#
+# Task: Section 15.1.
+# Satisfies Requirements R11.1 (single-command MC), R11.4 (deterministic
+# seeds), R9.1-R9.7 (ARE thresholds across regimes).
+
+run_id: synthetic_misspec_v1
+description: >
+  Synthetic Monte Carlo for the misspec primary scope. Three regime
+  blocks (matrix MAL non-degradation, Student-t misspec, Gaussian
+  non-degradation) over a small (k, n, p) grid; expand via env-flag
+  MV_PATP_FULL=1 for the full manuscript-table run.
+
+replicates: 60
+
+grid:
+  k: [2]
+  n: [512]
+  p: [2]
+  alpha_MAL: [0.6, 1.0, 2.0]   # matrix MAL shape; ignored for student_t cells
+  M_norm: [0.0]
+  sigma_structure:
+    - "I"             # matrix MAL parametric correctness regime
+    - "student_t_3"   # heavy misspec
+    - "student_t_4"   # canonical heavy misspec
+    - "student_t_5"   # moderate misspec
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - matrix_f_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha
+  # opmm_alpha_exact omitted from the default loop because its O(k^4) cost
+  # makes the full grid expensive; activate explicitly via a bespoke run
+  # (config_pragmatic_vs_exact.yaml or the integration test).
+
+# Optional pass criteria (consumed by verify.py R9 checks).
+pass_criteria:
+  R9_1_student_t_df4_min_are: 1.20
+  R9_2_student_t_df3_min_are: 1.50
+  R9_4_gaussian_max_are_band: [0.95, 1.05]
+  R9_5_matrix_mal_band: [0.85, 1.10]

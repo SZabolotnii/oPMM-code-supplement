@@ -1,0 +1,10 @@
+cell_id,estimator,k,p,n,alpha_MAL,sigma_structure,M_norm,data_source,scenario,snr_db,status,mse_mean,mse_std,n_replicates,n_failures,wall_clock_mean_s
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_estols,ols,4,2,512,1.0,ar1_gamma_rho0p5,0.0,synthetic,,,ok,0.015431844512269848,0.00996653661469178,300,0,2.5259163521695882e-05
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_estopmm_alpha,opmm_alpha,4,2,512,1.0,ar1_gamma_rho0p5,0.0,synthetic,,,ok,0.015433910539922694,0.009960864996155035,300,0,0.01326493639984013
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p5_esttyler_opmm,tyler_opmm,4,2,512,1.0,ar1_gamma_rho0p5,0.0,synthetic,,,ok,0.015431078627109232,0.009966431903964434,300,0,0.29087120155333346
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_estols,ols,4,2,512,1.0,ar1_gamma_rho0p9,0.0,synthetic,,,ok,0.01669837981861261,0.015635903112252596,300,0,2.6386513685186704e-05
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_estopmm_alpha,opmm_alpha,4,2,512,1.0,ar1_gamma_rho0p9,0.0,synthetic,,,ok,0.0166629942618577,0.015611441480676613,300,0,0.013157600970201504
+k4_n512_alpha1.0_p2_M0.0_sigmaar1_gamma_rho0p9_esttyler_opmm,tyler_opmm,4,2,512,1.0,ar1_gamma_rho0p9,0.0,synthetic,,,ok,0.01664013008768563,0.015580664886131074,300,0,0.29065324236638845
+k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estols,ols,4,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.02943919958061456,0.014374426084761643,300,0,2.473806375443625e-05
+k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha,opmm_alpha,4,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.022189876871558222,0.010537919961439907,300,0,0.27868821803650157
+k4_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_esttyler_opmm,tyler_opmm,4,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.02232797293271764,0.010459073930203058,300,0,14.077733472496329

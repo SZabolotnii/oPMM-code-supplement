@@ -1,0 +1,14 @@
+{
+  "run_id": "complex_demo_v1",
+  "description": "Complex-baseband real-equivalent embedding proof-of-concept (reviewer Q7)",
+  "seed": 42,
+  "k": 4,
+  "p": 2,
+  "n": 512,
+  "df": 4.0,
+  "replicates": 200,
+  "python_version": "3.13.12",
+  "numpy_version": "2.4.4",
+  "noise": "circularly-symmetric complex Student-t, common Re/Im scale",
+  "embedding": "real-equivalent widely-linear (H_r 2k x 2p, S_r 2p x n)"
+}

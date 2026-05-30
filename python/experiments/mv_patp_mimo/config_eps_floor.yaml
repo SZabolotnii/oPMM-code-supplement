@@ -1,0 +1,32 @@
+---
+# config_eps_floor.yaml
+# Experiment 5: eps_min floor sensitivity sweep.
+# Confirms ARE spread < 0.5% when eps_min varies over 4 orders of magnitude.
+# Worst case: alpha=0.5 where weight |eps|^{alpha-1} = |eps|^{-0.5} -> inf at 0.
+#
+# Grid: k=2, n=512, p=2, Student-t df=4, alpha_p fixed at 0.5
+# Replicates: 200 per cell
+
+run_id: eps_floor_sensitivity_v1
+
+replicates: 200
+
+grid:
+  k: [2]
+  n: [512]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - student_t_4
+
+estimators:
+  - ols
+  - opmm_alpha_eps1e10
+  - opmm_alpha_eps1e8
+  - opmm_alpha_eps1e6
+  - opmm_alpha_eps1e4
+
+pass_criteria:
+  # Max relative spread of ARE across eps_min variants: < 0.5%
+  eps_floor_are_max_relative_spread: 0.005

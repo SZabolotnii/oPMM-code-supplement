@@ -1,0 +1,35 @@
+# config_gate2.yaml
+#
+# Gate No.2: k=2 pilot ARE >= 1.20 at alpha_MAL = 1.0 (Laplace tails).
+# This is the first multi-antenna efficiency check; failure means matrix
+# whitening eats the oPMM advantage and forces a scope reduction.
+#
+# Test file: tests/gates/test_pilot_k2.py
+# Satisfies Requirement R12.2.
+
+run_id: gate2_pilot_k2
+description: >
+  k=2 pilot study: ARE(oPMM_alpha vs OLS) must be at least 1.20 at
+  alpha_MAL = 1.0. Compares the proposed estimator against OLS, Wishart
+  MLE, and matrix-t MLE baselines.
+
+replicates: 500
+
+grid:
+  k: [2]
+  n: [256, 512]
+  alpha_MAL: [1.0]
+  p: [2, 4]
+  M_norm: [0.0]
+  sigma_structure: ["I"]
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - opmm_alpha
+
+gate:
+  name: "Gate No.2"
+  pass_criterion: "ARE(opmm_alpha vs ols) >= 1.20 on at least one (n, p) cell"
+  blocks_on_fail: ["Gate No.3", "Phase C", "Phase D"]

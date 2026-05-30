@@ -1,0 +1,44 @@
+---
+# config_middleton.yaml
+# Middleton Class A canonical impulsive-noise experiment (Spec §12 PIVOT 19).
+#
+# Closes the gap between the conclusion's "Middleton Class A" claim and §V
+# evidence, and answers reviewer Q6 (external validity to canonical impulsive
+# environments) on a physically motivated symmetric heavy-tailed DGP that is
+# distinct from the Student-t cells.
+#
+# Three impulsive indices A sweep the excess kurtosis gamma_4 = 3/(A(1+G')^2):
+#   A=1.0, G'=0.1 -> gamma_4 ~ 2.5   (moderate, ~ Student-t df 6.4)
+#   A=0.35,G'=0.1 -> gamma_4 ~ 7.1   (heavy,    ~ Student-t df 4.8)
+#   A=0.1, G'=0.1 -> gamma_4 ~ 24.8  (very heavy)
+#
+# Grid: k=2, p=2, n=512; M=300 replicates per cell (matches huber_comparison).
+
+run_id: middleton_v1
+
+replicates: 300
+
+grid:
+  k: [2]
+  n: [512]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - middleton_A1p0_G0p1
+    - middleton_A0p35_G0p1
+    - middleton_A0p1_G0p1
+
+estimators:
+  - ols
+  - matrix_t_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - opmm_alpha
+
+pass_criteria:
+  # oPMM_alpha should beat OLS on the heavy Class A cell (score gain present).
+  opmm_beats_ols_heavy_min_are: 1.20

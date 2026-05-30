@@ -1,0 +1,30 @@
+# config_synthetic_quick.yaml
+#
+# Fast synthetic Monte Carlo (~2-3 min on a single core) used to populate
+# the Phase B-validated cells of §V-B Table V without waiting for the
+# full 84-cell config_synthetic.yaml run. Single regime per call -- the
+# operator picks ``sigma_structure`` to match the cell of interest.
+#
+# Task: Section 15.1 (companion to the full grid).
+
+run_id: synthetic_quick_v1
+description: >
+  Fast 4-estimator x 1-cell synthetic MC for iterative manuscript-table
+  population. Targets the canonical Student-t df=4 misspec cell where
+  Phase B Gate No.2 was validated.
+
+replicates: 30
+
+grid:
+  k: [2]
+  n: [256]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure: ["student_t_4"]
+
+estimators:
+  - ols
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha

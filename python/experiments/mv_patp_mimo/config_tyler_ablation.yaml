@@ -1,0 +1,34 @@
+---
+# config_tyler_ablation.yaml
+# Experiment 4: Tyler-type scatter E-step vs sample-covariance E-step.
+# Tests whether Tyler Gamma hat reduces MSE on correlated-row noise (AR(1))
+# while matching oPMM_alpha on iid Student-t.
+#
+# Grid: k=4, n=512, p=2, AR(1) noise at rho∈{0.5,0.9} and iid t4
+# Replicates: 300 per cell
+
+run_id: tyler_ablation_v1
+
+replicates: 300
+
+grid:
+  k: [4]
+  n: [512]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - ar1_gamma_rho0p5
+    - ar1_gamma_rho0p9
+    - student_t_4
+
+estimators:
+  - ols
+  - opmm_alpha
+  - tyler_opmm
+
+pass_criteria:
+  # On iid Student-t: tyler_opmm and opmm_alpha within 2% MSE
+  tyler_vs_opmm_iid_max_relative_mse_diff: 0.02
+  # On AR(1) rho=0.9: tyler_opmm MSE <= opmm_alpha MSE (tyler is at least as good)
+  tyler_beats_opmm_on_ar1_rho09: true

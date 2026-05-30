@@ -1,0 +1,36 @@
+# config_gate1.yaml
+#
+# Gate No.1 (Spec.md Section 14, AGENTS.md Section 12 cheat sheet):
+# k=1 scalar consistency. The matrix algorithm at k=1 must reduce to the
+# scalar oPMM_alpha within 5 percent MSE delta vs. the scalar reference
+# implementation in theory/opmm_monte_carlo.py.
+#
+# Pass criterion: |MSE_matrix(k=1) - MSE_scalar| / MSE_scalar < 0.05
+# Failure response: halt, debug whitening / weights.
+#
+# Test file: tests/gates/test_scalar_consistency.py
+# Satisfies Requirement R12.1.
+
+run_id: gate1_scalar_consistency
+description: >
+  k=1 reduction sanity: matrix oPMM_alpha at k=1 must match scalar oPMM_alpha
+  within 5% MSE delta on symmetric GAL noise.
+
+replicates: 500
+
+grid:
+  k: [1]
+  n: [256, 512, 1024]
+  alpha_MAL: [0.5, 1.0, 2.0]
+  p: [1]
+  M_norm: [0.0]
+  sigma_structure: ["I"]
+
+estimators:
+  - opmm_alpha
+  - ols   # reference for ARE sanity (g should be near unity vs scalar oPMM)
+
+gate:
+  name: "Gate No.1"
+  pass_criterion: "abs(MSE_matrix - MSE_scalar) / MSE_scalar < 0.05"
+  blocks_on_fail: ["Gate No.2", "Gate No.3", "Phase C", "Phase D"]

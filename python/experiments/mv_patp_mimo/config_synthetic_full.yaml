@@ -1,0 +1,52 @@
+# config_synthetic_full.yaml
+#
+# Full synthetic Monte Carlo for §V-B Table V.
+# Three regime blocks (matrix MAL non-degradation, Student-t misspec,
+# Gaussian non-degradation) over the full (k, n, p) grid of Spec §6.4.
+#
+# Cell count: 3 × 3 × 2 × 3 × 1 × 5 × 7 = 1890 cells × 500 reps =
+# 945 000 fits. Estimated wall-clock on M3 Max:
+#   sequential        : ~6–10 h
+#   --workers 12      : ~1.5–2.5 h
+#
+# Task: §15.1.
+# Satisfies Requirements R9.1–R9.5, R11.1, R11.4.
+
+run_id: synthetic_full_v1
+description: >
+  Full synthetic Monte Carlo for §V-B Table V. Three regime blocks
+  (matrix MAL non-degradation, Student-t misspec, Gaussian
+  non-degradation) over the full (k, n, p) grid of Spec §6.4.
+
+replicates: 500
+
+grid:
+  k: [2, 4, 8]
+  n: [256, 512, 1024]
+  p: [2, 4]
+  alpha_MAL: [0.6, 1.0, 2.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - "I"             # matrix MAL parametric correctness (R9.5 band)
+    - "student_t_3"   # heavy misspec (R9.2 ARE ≥ 1.50)
+    - "student_t_4"   # canonical heavy misspec (R9.1 ARE ≥ 1.20)
+    - "student_t_5"   # moderate misspec (R9.3 ARE ≥ 1.15)
+    - "student_t_1000" # near-Gaussian non-degradation (R9.4 band)
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - matrix_f_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha
+  # opmm_alpha_exact excluded from default loop — O(k⁴) cost at k=8 is
+  # prohibitive; run separately via config_pragmatic_vs_exact.yaml.
+
+pass_criteria:
+  R9_1_student_t_df4_min_are: 1.20
+  R9_2_student_t_df3_min_are: 1.50
+  R9_3_student_t_df5_min_are: 1.15
+  R9_4_gaussian_max_are_band: [0.95, 1.05]
+  R9_5_matrix_mal_band: [0.85, 1.10]

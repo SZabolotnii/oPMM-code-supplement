@@ -1,0 +1,6 @@
+cell_id,estimator,k,p,n,alpha_MAL,sigma_structure,M_norm,data_source,scenario,snr_db,status,mse_mean,mse_std,n_replicates,n_failures,wall_clock_mean_s
+k2_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estols,ols,2,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.01610695520894983,0.011902684704347058,200,0,2.237520006019622e-05
+k2_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha_eps1e10,opmm_alpha_eps1e10,2,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.011658231537868992,0.008133039661490777,200,0,0.16756768790553905
+k2_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha_eps1e8,opmm_alpha_eps1e8,2,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.01165712636077477,0.008133873870634767,200,0,0.16704863308012136
+k2_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha_eps1e6,opmm_alpha_eps1e6,2,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.011661358285346616,0.00813398098524248,200,0,0.16852605853528074
+k2_n512_alpha1.0_p2_M0.0_sigmastudent_t_4_estopmm_alpha_eps1e4,opmm_alpha_eps1e4,2,2,512,1.0,student_t_4,0.0,synthetic,,,ok,0.011667052979082939,0.008132378619042093,200,0,0.16257968856480148

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the associated MV-PATP-MIMO manuscript."
+title: "MV-PATP-MIMO Code Supplement"
+authors:
+  - family-names: "Zabolotnii"
+    given-names: "Sergii"
+    orcid: "https://orcid.org/0000-0003-0242-2234"
+version: "0.1.0"
+date-released: "2026-05-14"
+license: "MIT"
+keywords:
+  - "MIMO channel identification"
+  - "matrix-variate heavy-tailed noise"
+  - "polynomial maximization method"
+  - "sign-preserving fractional score"
+  - "R"
+  - "Lean"

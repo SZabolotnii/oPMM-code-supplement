@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mv-patp-mimo"
+version = "0.1.0.dev0"
+description = "Matrix-variate Sign-Preserving Fractional PMM for MIMO Channel Identification under Heavy-Tailed Noise"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy==1.26.4",
+    "scipy==1.13.1",
+    "pandas==2.2.2",
+    "pyyaml==6.0.2",
+    "h5py==3.11.0",
+    "matplotlib==3.9.0",
+    "mpmath==1.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.2.2",
+    "hypothesis==6.103.4",
+    "pytest-benchmark==4.0.0",
+    "sympy==1.14.0",
+]
+jax = [
+    "jax==0.4.28",
+    "jaxlib==0.4.28",
+]
+real_data = [
+    "deepmimo==4.0.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gate: marks gate tests (run manually before phase transitions)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]

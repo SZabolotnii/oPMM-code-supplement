@@ -1,0 +1,23 @@
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# Lean
+/.lake/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

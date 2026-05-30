@@ -1,0 +1,36 @@
+---
+# config_ar1_gamma.yaml
+# Experiment 6: AR(1) correlated-row noise — demonstrates whitening gain activation.
+# huber_irls (no Gamma) should degrade vs whitened_huber and oPMM_alpha at rho=0.9.
+#
+# Grid: k=4, n=512, p=2, AR(1) noise at rho∈{0.5,0.9} and iid t4
+# Replicates: 300 per cell
+
+run_id: ar1_gamma_v1
+
+replicates: 300
+
+grid:
+  k: [4]
+  n: [512]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - ar1_gamma_rho0p5
+    - ar1_gamma_rho0p9
+    - student_t_4
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - opmm_alpha
+  - huber_irls
+  - whitened_huber
+
+pass_criteria:
+  # At AR(1) rho=0.9: whitening advantage >= 5% MSE reduction
+  whitening_advantage_ar1_rho09_min_pct: 5.0
+  # At iid t4: score dominates; oPMM_alpha > whitened_huber > huber_irls > OLS
+  score_ranking_iid_t4: true

@@ -1,0 +1,40 @@
+---
+# config_huber_comparison.yaml
+# Experiments 1, 2, 3: compare Huber IRLS, Whitened Huber, Student-t elementwise
+# against OLS and oPMM_alpha to decompose whitening gain vs score gain.
+#
+# Grid: k=2, n=512, p=2, Student-t noise at df∈{3,4,5}
+# Replicates: 300 per cell
+
+run_id: huber_comparison_v1
+
+replicates: 300
+
+grid:
+  k: [2]
+  n: [512]
+  p: [2]
+  alpha_MAL: [1.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - student_t_3
+    - student_t_4
+    - student_t_5
+
+estimators:
+  - ols
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - opmm_alpha
+  - matrix_t_mle
+
+pass_criteria:
+  # ARE(oPMM > whitened_huber) at df=4
+  opmm_beats_whitened_huber_df4_min_are: 1.02
+  # ARE(whitened_huber > huber_irls) at df=4
+  whitened_huber_beats_huber_irls_df4_min_are: 1.01
+  # ARE(huber_irls > OLS) at df=4
+  huber_irls_beats_ols_df4_min_are: 1.05
+  # student_t_elementwise does NOT collapse to OLS at df=4
+  student_t_elem_min_are_df4: 1.10

@@ -1,0 +1,40 @@
+run_id: deepmimo_v2
+description: >
+  §V-C real-data Monte Carlo on DeepMIMO v4 ray-traced channels (PIVOT 17).
+  Heavy-tailed misspec noise (Student-t df=4) per Spec §6.4 PIVOT 14: real
+  RF noise is modelled as heavier than matched MAL, and matrix-MAL at k=16
+  collapses to near-Gaussian after the alpha > (k-1)/2 Bartlett constraint.
+  Two scenarios contrast a semi-open campus (asu_campus_3p5, 6 reflections)
+  against a dense urban canyon (city_0_newyork_3p5, 3 reflections, 3-TX
+  MacroDataset). Channels are real-equivalent (Re/Im stack) and
+  unit-Frobenius-normalised. Verifies R10.1 (NMSE >= 15% improvement over
+  OLS at α_MAL=1.0) and R10.2 (estimator ranking).
+
+  matrix_f_mle excluded: its df1+df2 > 2(k-1)=30 constraint is too tight
+  for the k=16 real-equivalent channel; it returns failures uniformly. The
+  estimator ranking R10.2 covers opmm_α / matrix_t / Wishart / OLS.
+
+data_source: deepmimo
+replicates: 100
+
+grid:
+  scenarios:
+    - asu_campus_3p5
+    - city_0_newyork_3p5
+  snr_db: [-5.0, 0.0, 5.0, 10.0, 15.0]
+  n: [256]
+  p: [2]
+  alpha_MAL: [1.0]
+  sigma_structure: ["student_t_4"]
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha
+
+pass_criteria:
+  R10_1_min_nmse_improvement_pct: 15.0
+  R10_2_ranking: ["opmm_alpha", "matrix_t_mle", "wishart_mle", "ols"]
