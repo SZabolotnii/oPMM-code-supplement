@@ -1,0 +1,37 @@
+# config_r1_fixed_alpha.yaml
+#
+# R1 (Rv1-C7): fixed alpha vs adaptive alpha-hat. Replaces the unstored
+# supplement claim (fixed alpha = 2 -> 1.24 vs adaptive 1.33 on Laplace).
+# Paired design: every estimator in a (k, n, p, sigma) configuration sees the
+# same (Y, S, H) per replicate. Run with --per-replicate.
+#
+# Fixed values (theory.md [Q] table): 0.3 = heuristic limit (t3, t4);
+# 0.536 = heuristic limit (t5), close to argmin g for t3 (0.50);
+# 0.77 = argmin g for t4; 2.0 = value in the submitted supplement.
+# All fixed variants run with the R1 divergence guard (as opmm_alpha).
+# opmm_alpha_unguarded = the as-submitted adaptive fit.
+# n axis: theory.md predicts adaptive / fixed-alpha-bar -> 1 as n grows.
+# Cells: 2 k x 3 n x 1 p x 3 noise x 7 estimators = 126.
+
+run_id: r1_fixed_alpha
+
+replicates: 500
+
+grid:
+  k: [2, 4]
+  n: [256, 512, 1024]
+  p: [2]
+  M_norm: [0.0]
+  sigma_structure:
+    - student_t_3
+    - student_t_4
+    - student_t_5
+
+estimators:
+  - ols
+  - opmm_alpha
+  - opmm_alpha_unguarded
+  - opmm_alpha_fixed0p3
+  - opmm_alpha_fixed0p536
+  - opmm_alpha_fixed0p77
+  - opmm_alpha_fixed2p0

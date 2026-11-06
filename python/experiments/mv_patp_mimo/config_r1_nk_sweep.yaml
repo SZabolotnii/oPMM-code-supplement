@@ -1,0 +1,27 @@
+# config_r1_nk_sweep.yaml
+#
+# R1 (Rv5-m7, supplement n/k table): pilot-length sweep for the
+# admissibility boundary. The cover letter says "ARE < 1 for n/k <= 24",
+# the supplement says threshold n/k = 32; no point between 8 and 32 was
+# stored. k = 4, p = 2, iid Student-t df = 4, n/k in
+# {8, 12, 16, 24, 32, 48, 64, 128} -> n in {32, 48, 64, 96, 128, 192, 256, 512}.
+# DGP = run.py (no SNR scaling; the submitted table used SNR 10 dB, M = 300),
+# so the numbers are not a rerun of the submitted table but replace it.
+# Cells: 8 n x 3 estimators = 24.
+
+run_id: r1_nk_sweep
+
+replicates: 500
+
+grid:
+  k: [4]
+  n: [32, 48, 64, 96, 128, 192, 256, 512]
+  p: [2]
+  M_norm: [0.0]
+  sigma_structure:
+    - student_t_4
+
+estimators:
+  - ols
+  - opmm_alpha
+  - opmm_alpha_unguarded

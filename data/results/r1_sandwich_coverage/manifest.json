@@ -1,0 +1,11 @@
+{
+  "script": "scripts/r1_sandwich_coverage.py",
+  "argv": [
+    "-o",
+    "data/results/r1_sandwich_coverage",
+    "--workers",
+    "8"
+  ],
+  "wall_clock_seconds": 393.1060953140259,
+  "n_rows": 180000
+}

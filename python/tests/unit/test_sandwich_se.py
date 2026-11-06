@@ -68,3 +68,41 @@ def test_sandwich_se_decreases_with_n_when_n_doubled() -> None:
     assert 1.5 < ratio < 3.0, (
         f"SE ratio {ratio:.2f} out of expected band [1.5, 3.0] for 4x n change"
     )
+
+
+def test_sandwich_se_rejects_unknown_options() -> None:
+    """Unknown bread/meat options raise ValueError."""
+    Y, S, _ = _make_problem(k=2, p=2, n=128, seed=42)
+    fit = em_patp_estimate(Y, S, max_iter=15, alpha_p_init=2.0, alpha_p_fixed=True)
+    with pytest.raises(ValueError):
+        sandwich_se(Y, S, fit, bread="diag_w")
+    with pytest.raises(ValueError):
+        sandwich_se(Y, S, fit, meat="hac")
+
+
+def test_sandwich_se_psi_prime_bread_exceeds_weight_bread_on_heavy_tails() -> None:
+    """At alpha < 1 on heavy tails psi' < w pointwise, so the corrected SE is larger.
+
+    psi'(e) - w(e) = k2* (alpha - 1) |e|^(alpha - 1) <= 0 when k2* >= 0, alpha < 1
+    (R1, Rv4-C2b).
+    """
+    rng = np.random.default_rng(3)
+    k, p, n = 2, 2, 512
+    H = rng.standard_normal((k, p))
+    S = rng.choice([-1.0, 1.0], size=(p, n))
+    Y = H @ S + rng.standard_t(4, size=(k, n)) / np.sqrt(2.0)
+    fit = em_patp_estimate(Y, S, max_iter=20, alpha_p_init=0.5, alpha_p_fixed=True)
+    se_new = sandwich_se(Y, S, fit)
+    se_old = sandwich_se(Y, S, fit, bread="weight")
+    assert np.all(se_new > 1.3 * se_old)
+
+
+def test_sandwich_se_cluster_meat_matches_shape_and_is_close() -> None:
+    """Column-cluster meat returns the same shape and, on iid noise, similar SEs."""
+    Y, S, _ = _make_problem(k=2, p=2, n=512, seed=11)
+    fit = em_patp_estimate(Y, S, max_iter=15, alpha_p_init=2.0, alpha_p_fixed=True)
+    se_e = sandwich_se(Y, S, fit)
+    se_c = sandwich_se(Y, S, fit, meat="cluster")
+    assert se_c.shape == se_e.shape
+    assert np.all(np.isfinite(se_c)) and np.all(se_c > 0)
+    assert np.allclose(se_c, se_e, rtol=0.25)

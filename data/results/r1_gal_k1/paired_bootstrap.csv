@@ -1,0 +1,11 @@
+data_id,k,n,p,sigma_structure,alpha_used,comparison,estimator,reference,n_pairs,ratio,ci_lo,ci_hi,B,level
+gal_k1_alpha0.5_n512,1,512,1,gal_0.5,,are_vs_ols,opmm_alpha,ols,500,3.789432674729538,3.2810237727548865,4.424158101771848,2000,0.95
+gal_k1_alpha0.5_n512,1,512,1,gal_0.5,,are_vs_ols,opmm_alpha_unguarded,ols,500,3.789432674729538,3.263654044663186,4.390062637220521,2000,0.95
+gal_k1_alpha0.5_n512,1,512,1,gal_0.5,,are_vs_ols,scalar_opmm,ols,500,3.789539228899461,3.267522820005663,4.382147957158131,2000,0.95
+gal_k1_alpha0.5_n512,1,512,1,gal_0.5,,mse_ratio_opmm_alpha_over_scalar_opmm,opmm_alpha,scalar_opmm,500,1.0000281187658073,0.999999918422407,1.000087145310829,2000,0.95
+gal_k1_alpha0.5_n512,1,512,1,gal_0.5,,mse_ratio_opmm_alpha_over_opmm_alpha_unguarded,opmm_alpha,opmm_alpha_unguarded,500,1.0,1.0,1.0,2000,0.95
+gal_k1_alpha1.0_n512,1,512,1,gal_1.0,,are_vs_ols,opmm_alpha,ols,500,1.2564203884610055,1.0213978458620685,1.5347957283587588,2000,0.95
+gal_k1_alpha1.0_n512,1,512,1,gal_1.0,,are_vs_ols,opmm_alpha_unguarded,ols,500,1.1037856543373048,0.8107806649154495,1.4661342298895774,2000,0.95
+gal_k1_alpha1.0_n512,1,512,1,gal_1.0,,are_vs_ols,scalar_opmm,ols,500,1.1649511214578714,0.8557834962517231,1.5083420631883488,2000,0.95
+gal_k1_alpha1.0_n512,1,512,1,gal_1.0,,mse_ratio_opmm_alpha_over_scalar_opmm,opmm_alpha,scalar_opmm,500,0.9271985174363692,0.6952563105239823,1.1338027855232462,2000,0.95
+gal_k1_alpha1.0_n512,1,512,1,gal_1.0,,mse_ratio_opmm_alpha_over_opmm_alpha_unguarded,opmm_alpha,opmm_alpha_unguarded,500,0.8785161912959216,0.6800565618702389,1.0,2000,0.95

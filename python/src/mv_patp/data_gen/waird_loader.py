@@ -29,7 +29,12 @@ from pathlib import Path
 
 import numpy as np
 
-from mv_patp.data_gen.matrix_mal_dgp import sample_matrix_mal
+from mv_patp.data_gen.deepmimo_loader import (
+    InvalidAlphaError,  # noqa: F401  (re-exported for callers)
+    draw_unit_noise,
+    replicate_streams,
+    scale_noise,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -92,15 +97,6 @@ def _real_equiv(H_complex: np.ndarray) -> np.ndarray:
     return np.concatenate([H_complex.real, H_complex.imag], axis=0).astype(np.float64)
 
 
-def _scale_noise_to_snr(HS: np.ndarray, N_unit: np.ndarray, snr_db: float) -> np.ndarray:
-    sig_power = float(np.mean(HS * HS))
-    noise_power = float(np.mean(N_unit * N_unit))
-    if noise_power <= 0.0:
-        raise ValueError("Noise sample has zero power; cannot rescale.")
-    target_noise_power = sig_power / (10.0 ** (snr_db / 10.0))
-    return float(np.sqrt(target_noise_power / noise_power)) * N_unit
-
-
 def load_waird(
     env_id: int,
     snr_db: float,
@@ -112,6 +108,10 @@ def load_waird(
     noise_kind: str = "student_t_4",
     seed: int = 42,
     data_dir: str | Path = "data/waird/extracted/WAIR-D/data/scenario_1",
+    seed_scheme: str = "legacy",
+    noise_per_snr: bool = False,
+    snr_scaling: str = "realised",
+    alpha_policy: str = "invalid",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Build a ``(Y, S, H_truth)`` triple from a WAIR-D ray-traced environment.
 
@@ -143,6 +143,11 @@ def load_waird(
         noise uses ``seed + 1``, UE column selection uses ``seed + 2``.
     data_dir : str or Path
         Root directory of WAIR-D Scenario 1 environments.
+    seed_scheme, noise_per_snr, snr_scaling, alpha_policy
+        Noise-injection protocol shared with ``deepmimo_loader`` (see its
+        module docstring). Defaults reproduce the original streams; an
+        invalid matrix-MAL alpha now raises ``InvalidAlphaError`` unless
+        ``alpha_policy="clip_legacy"``.
 
     Returns
     -------
@@ -171,7 +176,9 @@ def load_waird(
         )
 
     # Select p UE columns deterministically from seed.
-    rng_ue = np.random.default_rng(seed + 2)
+    rng_ue, rng_S, noise_seed = replicate_streams(
+        seed, snr_db, seed_scheme=seed_scheme, noise_per_snr=noise_per_snr,
+    )
     col_idx = rng_ue.choice(n_ue, size=p, replace=False)
     H_sub = H_complex[:, col_idx]              # (n_bs, p) complex
 
@@ -183,32 +190,13 @@ def load_waird(
         raise ValueError(f"Environment {env_id}: channel has zero Frobenius norm.")
     H_truth = H_truth / H_norm
 
-    rng_S = np.random.default_rng(seed)
     S = rng_S.standard_normal((p, n_train)).astype(np.float64)
     HS = H_truth @ S                           # (k, n_train)
 
-    if noise_kind.startswith("student_t_"):
-        df = float(noise_kind.split("_")[-1])
-        rng_n = np.random.default_rng(seed + 1)
-        z = rng_n.standard_normal((k, n_train))
-        chi2 = rng_n.chisquare(df=df, size=(k, n_train))
-        N_unit = (z / np.sqrt(chi2 / df)).astype(np.float64)
-    elif noise_kind == "matrix_mal":
-        alpha_used = max(alpha_mal, (k - 1) / 2.0 + 0.05)
-        if alpha_used != alpha_mal:
-            logger.info(
-                "alpha_mal=%.3f clipped to %.3f for k=%d.",
-                alpha_mal, alpha_used, k,
-            )
-        N_unit = sample_matrix_mal(
-            n_samples=1, k=k, n=n_train, alpha=alpha_used, seed=seed + 1,
-        )[0]
-    else:
-        raise ValueError(
-            f"Unsupported noise_kind={noise_kind!r}; "
-            f"expected 'matrix_mal' or 'student_t_<df>'."
-        )
-
-    N = _scale_noise_to_snr(HS, N_unit, snr_db)
+    N_unit, unit_var = draw_unit_noise(
+        noise_kind, k, n_train, noise_seed,
+        alpha_mal=alpha_mal, alpha_policy=alpha_policy,
+    )
+    N = scale_noise(HS, H_truth, N_unit, unit_var, snr_db, snr_scaling=snr_scaling)
     Y = HS + N
     return Y, S, H_truth

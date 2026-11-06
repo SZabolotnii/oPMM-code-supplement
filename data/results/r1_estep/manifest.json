@@ -1,0 +1,13 @@
+{
+  "script": "scripts/r1_estep_ablation.py",
+  "argv": [
+    "-o",
+    "data/results/r1_estep",
+    "--reps",
+    "500",
+    "--workers",
+    "8"
+  ],
+  "wall_clock_seconds": 232.90735793113708,
+  "n_rows": 24000
+}

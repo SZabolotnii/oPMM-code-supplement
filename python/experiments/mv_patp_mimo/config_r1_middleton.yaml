@@ -1,0 +1,34 @@
+# config_r1_middleton.yaml
+#
+# R1 (triage T2, conclusion "exceeds 1.20"; Rv1-C15 CIs): Middleton Class A
+# block of config_middleton.yaml (middleton_v1, 300 reps, no per-replicate
+# output) rerun with the safeguarded opmm_alpha, per-replicate output for
+# paired-bootstrap CIs, 500 replicates (replicates 0..299 use the same seeds
+# as middleton_v1), plus opmm_alpha_unguarded (as-submitted fit).
+# gamma_4 = 3/(A(1+G')^2): A = 1.0 -> 2.5, A = 0.35 -> 7.1, A = 0.1 -> 24.8.
+# Cells: 3 noise x 9 estimators = 27.
+
+run_id: r1_middleton
+
+replicates: 500
+
+grid:
+  k: [2]
+  n: [512]
+  p: [2]
+  M_norm: [0.0]
+  sigma_structure:
+    - middleton_A1p0_G0p1
+    - middleton_A0p35_G0p1
+    - middleton_A0p1_G0p1
+
+estimators:
+  - ols
+  - matrix_t_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - opmm_alpha
+  - opmm_alpha_unguarded

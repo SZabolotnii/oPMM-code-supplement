@@ -6,6 +6,7 @@ uniformly. See ``design.md`` Section "L2 -- Estimators and inference".
 """
 
 from mv_patp.baseline import (
+    huber_adaptive_c,
     huber_irls,
     matrix_f_mle,
     matrix_pmm2,
@@ -21,6 +22,7 @@ from mv_patp.baseline._types import BaselineResult
 
 __all__ = [
     "BaselineResult",
+    "huber_adaptive_c",
     "huber_irls",
     "matrix_f_mle",
     "matrix_pmm2",

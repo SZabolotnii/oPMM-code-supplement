@@ -67,3 +67,56 @@ def test_sandwich_se_achieves_nominal_coverage_on_matrix_mal() -> None:
         f"Empirical coverage {coverage:.3f} outside [{lo}, {hi}] "
         f"(target ~0.95, M={_M_REPLICATES})."
     )
+
+
+# ---------------------------------------------------------------------------
+# R1 (DSP-D-26-03654, Rv4-C2b): heavy-tailed Student-t cells.
+#
+# The matched-MAL test above cannot detect a wrong bread: its whitened
+# residuals are near-Gaussian, so k2* ~ 0 and w ~ psi'. On iid Student-t
+# noise with a fixed sub-linear alpha, k2* is far from zero and the pre-R1
+# bread diag(w) undercovers (0.66 at df=5, 0.76 at df=8 with this seed set),
+# while the corrected bread diag(psi') is near nominal (0.94, 0.95).
+# Runtime 25-40 s per cell under pytest (~65 s for both), so marked slow.
+# ---------------------------------------------------------------------------
+
+_T_N: int = 512
+_T_M_REPLICATES: int = 200
+_T_ALPHA_FIXED: float = 0.5
+_T_NEW_BAND: tuple[float, float] = (0.90, 0.98)
+_T_OLD_MAX: float = 0.85
+
+
+def _student_t_coverage(df: int) -> tuple[float, float]:
+    """Per-entry coverage of nominal 95% Wald intervals: (old bread, new bread)."""
+    H_truth = np.random.default_rng(7).standard_normal((_K, _P))
+    scale = np.sqrt((df - 2) / df)  # unit-variance Student-t
+    inside_old = inside_new = 0
+    for rep in range(_T_M_REPLICATES):
+        rng = np.random.default_rng(10_000 * df + rep)
+        S = rng.choice([-1.0, 1.0], size=(_P, _T_N))
+        N = rng.standard_t(df, size=(_K, _T_N)) * scale
+        Y = H_truth @ S + N
+        fit = em_patp_estimate(
+            Y, S, max_iter=20, alpha_p_init=_T_ALPHA_FIXED, alpha_p_fixed=True,
+        )
+        err = np.abs(fit.H - H_truth)
+        inside_old += int(np.sum(err <= _Z_975 * sandwich_se(Y, S, fit, bread="weight")))
+        inside_new += int(np.sum(err <= _Z_975 * sandwich_se(Y, S, fit)))
+    total = _T_M_REPLICATES * _K * _P
+    return inside_old / total, inside_new / total
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("df", [5, 8])
+def test_sandwich_se_psi_prime_bread_covers_on_student_t(df: int) -> None:
+    """Corrected bread reaches [0.90, 0.98]; the pre-R1 bread falls below 0.85."""
+    cov_old, cov_new = _student_t_coverage(df)
+    lo, hi = _T_NEW_BAND
+    assert lo <= cov_new <= hi, (
+        f"t{df}: corrected-bread coverage {cov_new:.3f} outside [{lo}, {hi}]."
+    )
+    assert cov_old < _T_OLD_MAX, (
+        f"t{df}: legacy diag(w) bread coverage {cov_old:.3f} >= {_T_OLD_MAX}; "
+        "this cell no longer discriminates the bread bug."
+    )

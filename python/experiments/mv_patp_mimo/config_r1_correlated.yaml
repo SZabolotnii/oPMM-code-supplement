@@ -1,0 +1,40 @@
+# config_r1_correlated.yaml
+#
+# R1 (Rv4-C5b, Rv5-C1a): correlated heavy-tailed rows. Extends
+# ar1_gamma_v1 (Gaussian AR(1), 18 cells) to heavy tails.
+#
+# ar1t_rho<r>_df<v>: N = L T, L L^T = Gamma, Gamma_ij = rho^|i-j|,
+# T_ij iid Student-t_v. Columns iid with Cov = v/(v-2) * Gamma (v > 2);
+# not a multivariate t (no shared mixing scale per column).
+# student_t_<v> (rho = 0) is included as the uncorrelated reference on the
+# same seeds, so the whitening gain can be read as a paired contrast.
+#
+# Cells: 2 k x 9 noise x 6 estimators = 108 x 500 reps.
+
+run_id: r1_correlated
+
+replicates: 500
+
+grid:
+  k: [4, 8]
+  n: [512]
+  p: [2]
+  M_norm: [0.0]
+  sigma_structure:
+    - ar1t_rho0p5_df3
+    - ar1t_rho0p5_df4
+    - ar1t_rho0p5_df5
+    - ar1t_rho0p9_df3
+    - ar1t_rho0p9_df4
+    - ar1t_rho0p9_df5
+    - student_t_3
+    - student_t_4
+    - student_t_5
+
+estimators:
+  - ols
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - matrix_pmm3
+  - opmm_alpha

@@ -1,0 +1,34 @@
+# config_r1_deepmimo_legacy.yaml
+#
+# Companion of config_r1_deepmimo.yaml with the PRE-R1 noise-injection
+# protocol (legacy seed streams, one noise draw shared by all SNRs,
+# realised-power scaling) and the same seven estimators. Its OLS / PMM3
+# cells reproduce deepmimo_v2 (checked 2026-11-04, rel. diff <= 6e-10), so
+# the pair isolates the effect of the protocol change on Table II.
+# Optional; run only if the response letter needs that comparison.
+
+run_id: r1_deepmimo_legacy
+
+data_source: deepmimo
+replicates: 100
+
+deepmimo_options: {}
+
+grid:
+  scenarios:
+    - asu_campus_3p5
+    - city_0_newyork_3p5
+  snr_db: [-5.0, 0.0, 5.0, 10.0, 15.0]
+  n: [256]
+  p: [2]
+  alpha_MAL: [1.0]
+  sigma_structure: ["student_t_4"]
+
+estimators:
+  - ols
+  - matrix_pmm2
+  - matrix_pmm3
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - opmm_alpha

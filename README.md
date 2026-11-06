@@ -17,7 +17,9 @@ scripts, rendered figures, and a compact Lean 4 formal supplement.
   (`experiments/mv_patp_mimo/run_complex_demo.py`), and the symbolic Recovery
   Theorem check (`theory/recovery_symbolic_check.py`).
 - `data/results/` - CSV and manifest snapshots for the result directories used
-  by the manuscript.
+  by the manuscript. The `r1_*` directories hold the first-round revision
+  studies, with per-replicate errors and paired bootstrap intervals; see
+  `REPRODUCIBILITY.md`.
 - `R/` - lightweight R scripts that summarize the CSV snapshots and render
   independent PDF checks.
 - `figures/` - manuscript PDF figures copied from the release build.

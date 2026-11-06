@@ -1,0 +1,13 @@
+{
+  "script": "scripts/r1_gal_k1.py",
+  "argv": [
+    "-o",
+    "data/results/r1_gal_k1",
+    "--reps",
+    "500",
+    "--workers",
+    "8"
+  ],
+  "wall_clock_seconds": 7.1900129318237305,
+  "n_rows": 4000
+}

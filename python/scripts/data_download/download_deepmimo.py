@@ -4,9 +4,12 @@ DeepMIMO (Alkhateeb 2019) is the primary real-data MIMO benchmark per
 Spec.md Section 6.1 / Requirement R10.1, R10.2. We use the O1 (28 GHz
 outdoor street canyon) and I1 (2.5 GHz indoor) ray-tracing scenarios.
 
-This script does NOT bundle a download URL inline because DeepMIMO requires
-a free user registration before download access is granted; the operator
-provides the resolved URL via ``--url``. The script verifies the SHA-256 of
+Superseded for the v4 scenarios (checked 2026-11-04): no registration is
+needed; ``deepmimo.download(name)`` (deepmimo 4.0.5) fetches
+``https://deepmimo.net/api/download/secure?filename=<name>.zip``, and
+``export_deepmimo_channels.py`` writes the channel tables the loader reads
+(see ``$RESEARCH_DATA_ROOT/store/deepmimo-v4/SOURCE.md``). Legacy URL mode:
+the operator provides the resolved URL via ``--url``. The script verifies the SHA-256 of
 the downloaded file against ``data/expected_hashes.json`` and, on success,
 writes it under ``data/deepmimo/``.
 

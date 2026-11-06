@@ -1,0 +1,41 @@
+# config_r1_consolidated_full.yaml
+#
+# R1 (Rv1-C8, Rv1-C9, Rv3-C4): one consolidated table replacing Tables I
+# and III. All estimators, including the three robust baselines, on
+# identical data: every estimator in a (k, n, p, sigma) configuration sees
+# the same (Y, S, H) per replicate (default_rng(seed + rep)), so MSE ratios
+# are paired. The MAL alpha axis is inert here and is not expanded.
+# Run with --per-replicate for paired-bootstrap CIs.
+#
+# Noise: iid Student-t df in {3, 4, 5, 1000} plus exactly Gaussian.
+# FULL GRID: ~10.5 h with --workers 8 (overnight option; the default
+# config_r1_consolidated.yaml + _p4 cover a subset in ~5.8 h).
+# Cells: 3 k x 3 n x 2 p x 5 noise x 10 estimators = 900 x 500 reps.
+
+run_id: r1_consolidated_full
+
+replicates: 500
+
+grid:
+  k: [2, 4, 8]
+  n: [256, 512, 1024]
+  p: [2, 4]
+  M_norm: [0.0]
+  sigma_structure:
+    - student_t_3
+    - student_t_4
+    - student_t_5
+    - student_t_1000
+    - gaussian
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - matrix_f_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise

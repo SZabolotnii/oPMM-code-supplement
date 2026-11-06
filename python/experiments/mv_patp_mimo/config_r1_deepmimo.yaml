@@ -1,0 +1,55 @@
+# config_r1_deepmimo.yaml
+#
+# R1 rerun of Table II (Rv1-C14, Rv1-C15/T7, Rv3-C4): DeepMIMO v4 ray-traced
+# channels (asu_campus_3p5, city_0_newyork_3p5), injected iid Student-t df=4
+# noise, SNR in {-5, 0, 5, 10, 15} dB. Run with --per-replicate, then
+# scripts/r1_paired_bootstrap.py for paired CIs (NMSE gain = 1 - 1/ARE).
+#
+# Noise-injection protocol (deepmimo_options, see deepmimo_loader docstring):
+#   seed_scheme: spawn      channel / pilot / noise from SeedSequence(42+rep)
+#                           .spawn(3): no stream overlap between replicates.
+#   noise_per_snr: true     an independent noise draw at each SNR, so the SNR
+#                           axis is not invariant by construction; channel and
+#                           pilot stay common across SNR and estimators.
+#   snr_scaling: nominal    noise scaled by its nominal variance df/(df-2) to
+#                           nominal signal power ||H||_F^2/k = 1/k, not by the
+#                           realised powers of each draw (no self-normalisation).
+#   alpha_policy: invalid   inert here (Student-t); MAL alpha is never clipped.
+# The pre-R1 protocol is deepmimo_options: {} (= config_deepmimo.yaml).
+#
+# Data: $DEEPMIMO_DATA_DIR or $RESEARCH_DATA_ROOT/store/deepmimo-v4/data
+# (channel tables <scenario>_ch2d.npz; see MANIFEST.sha256 there).
+#
+# Estimators: matrix_f_mle is excluded (df1+df2 > 2(k-1) = 30 fails at the
+# real-equivalent k = 16, as in deepmimo_v2); wishart_mle / matrix_t_mle are
+# not in the R1 Table II list. Cells: 2 scen x 5 SNR x 7 est = 70 x 100 reps.
+
+run_id: r1_deepmimo
+
+data_source: deepmimo
+replicates: 100
+
+deepmimo_options:
+  seed_scheme: spawn
+  noise_per_snr: true
+  snr_scaling: nominal
+  alpha_policy: invalid
+
+grid:
+  scenarios:
+    - asu_campus_3p5
+    - city_0_newyork_3p5
+  snr_db: [-5.0, 0.0, 5.0, 10.0, 15.0]
+  n: [256]
+  p: [2]
+  alpha_MAL: [1.0]
+  sigma_structure: ["student_t_4"]
+
+estimators:
+  - ols
+  - matrix_pmm2
+  - matrix_pmm3
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
+  - opmm_alpha

@@ -1,0 +1,37 @@
+# config_r1_mal_valid.yaml
+#
+# R1 (DSP-D-26-03654, Rv2-C2 / Rv4-C4a): matrix-MAL block on a VALID per-k
+# grid. The submitted run used alpha_MAL in {0.6, 1.0, 2.0}, which violates
+# the Bartlett condition alpha > (k-1)/2 at k = 4, 8; run.py then clipped it
+# silently to (k-1)/2 + 0.05. Here alpha = (k-1)/2 + offset, so every cell
+# is valid by construction and the alpha actually used is recorded in each
+# row (alpha_used). Run with --per-replicate.
+#
+#   k=2: alpha in {1.0, 1.5, 3.5}; k=4: {2.0, 2.5, 4.5}; k=8: {4.0, 4.5, 6.5}
+#
+# Cells: 3 k x 3 n x 2 p x 3 offsets x 10 estimators = 540 x 500 reps.
+
+run_id: r1_mal_valid
+
+replicates: 500
+
+grid:
+  k: [2, 4, 8]
+  n: [256, 512, 1024]
+  p: [2, 4]
+  alpha_MAL_offset: [0.5, 1.0, 3.0]
+  M_norm: [0.0]
+  sigma_structure:
+    - "I"            # matrix MAL, Sigma = I_n, M = 0
+
+estimators:
+  - ols
+  - wishart_mle
+  - matrix_t_mle
+  - matrix_f_mle
+  - matrix_pmm2
+  - matrix_pmm3
+  - opmm_alpha
+  - huber_irls
+  - whitened_huber
+  - student_t_elementwise
